@@ -1,0 +1,13 @@
+body {
+    font-family:'Courier New', Courier, monospace;
+}
+
+h1 {
+    font-weight: 300;
+    font-size: x-large;
+}
+
+h2 {
+    font-weight: 500;
+    font-size: smaller;
+}
