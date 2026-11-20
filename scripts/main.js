@@ -41,6 +41,8 @@ const performanceMonitor = new PerformanceMonitor();
 let bvh;
 
 
+// Shaders
+
 const vertexShader = `
     #include <batching_pars_vertex>
     #include <color_pars_vertex>
@@ -54,12 +56,10 @@ const vertexShader = `
         #include <color_vertex>
 
         mat4 batchingModelViewMatrix = modelViewMatrix * batchingMatrix;
-
         vec4 batchedPosition = batchingModelViewMatrix * vec4( position, 1.0 );
+        
         v_ViewDirection = normalize( -batchedPosition.xyz );
-
         v_BatchedNormal = vec3( normalize( batchingModelViewMatrix * vec4( normal, 0.0 )));
-
         v_BatchedColor = vec4( vColor );
         
         gl_Position = projectionMatrix * batchedPosition;
@@ -74,11 +74,13 @@ const fragmentShader = `
     void main() {
         float fresnel = dot( v_ViewDirection, v_BatchedNormal );
 
-        gl_FragColor = vec4( vec3( fresnel * v_BatchedColor.rgb), v_BatchedColor.a );  // v_InstanceColor
-        // gl_FragColor = vec4( fresnel * vec3( 0.8, 0.8, 0.8 ), 1.0 );
+        gl_FragColor = vec4( vec3( fresnel * v_BatchedColor.rgb), v_BatchedColor.a );
     }
 `
 
+
+
+// Setup
 
 await init();
 
@@ -87,6 +89,8 @@ bvh = new ObjectBVH( scene );
 animate();
 
 
+
+// Init Functions
 
 async function init() {
     const loader = new GLTFLoader().setPath( "public/models/" );
@@ -171,6 +175,9 @@ function animate() {
 
     performanceMonitor.update( renderer, scene );
 }
+
+
+// eventListeners
 
 window.addEventListener( 'dblclick', (e) => {
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
