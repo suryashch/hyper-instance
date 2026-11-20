@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ObjectBVH, acceleratedRaycast } from 'three-mesh-bvh';
+import { PerformanceMonitor } from './utils/performanceMonitor.js';
 
 const renderer = new THREE.WebGLRenderer()
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -34,6 +35,8 @@ THREE.Mesh.prototype.raycast = acceleratedRaycast;
 raycaster.firstHitOnly = true;
 
 const mouse = new THREE.Vector2();
+
+const performanceMonitor = new PerformanceMonitor();
 
 let bvh;
 
@@ -83,11 +86,7 @@ bvh = new ObjectBVH( scene );
 
 animate();
 
-function animate() {
-    requestAnimationFrame( animate );
-    renderer.render( scene, camera );
-    controls.update();
-}
+
 
 async function init() {
     const loader = new GLTFLoader().setPath( "public/models/" );
@@ -163,6 +162,14 @@ async function init() {
 
         objectGroup.add( batchedMesh );
     }
+}
+
+function animate() {
+    requestAnimationFrame( animate );
+    renderer.render( scene, camera );
+    controls.update();
+
+    performanceMonitor.update( renderer, scene );
 }
 
 window.addEventListener( 'dblclick', (e) => {
