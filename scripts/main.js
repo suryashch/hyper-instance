@@ -12,11 +12,23 @@ document.body.appendChild( renderer.domElement );
 
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 1, 2000 );
+const camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 250 );
 camera.position.set( 10,10,10 );
 
 const controls = new OrbitControls( camera, renderer.domElement );
 controls.enablePan = true;
+controls.minDistance = 0.1;
+controls.maxDistance = 150;
+controls.minPolarAngle = 0;
+controls.maxPolarAngle = 3;
+controls.zoomSpeed = 0.5;
+controls.panSpeed = 0.5;
+controls.rotateSpeed = 0.15;
+controls.mouseButtons = {
+    LEFT: THREE.MOUSE.ROTATE,
+	MIDDLE: THREE.MOUSE.DOLLY,
+	RIGHT: THREE.MOUSE.PAN
+}
 controls.target = new THREE.Vector3( 0,0,0 );
 controls.update();
 
@@ -90,6 +102,7 @@ animate();
 
 
 
+
 // Init Functions
 
 async function init() {
@@ -123,7 +136,7 @@ async function init() {
         )
         
         gltf.scene.traverse(( child ) => {
-            if ( child.isMesh && child.children.length === 0 ) {
+            if ( child.isMesh ) {
                 if ( i > n_Instances ) {
                     console.log("Exceeded number of instances");
                     return;
@@ -153,6 +166,9 @@ async function init() {
                 instanceId = batchedMesh.addInstance( visited.indexOf( child.geometry.uuid ));
                 batchedMesh.setMatrixAt( instanceId, matrix );
                 batchedMesh.setColorAt( instanceId, instColor );
+
+                if ( child.children.length > 0 ) batchedMesh.setVisibleAt( instanceId, false );
+
                 i++;
 
                 child.geometry = null;
@@ -165,11 +181,11 @@ async function init() {
         })
 
         objectGroup.add( batchedMesh );
+        requestAnimationFrame( animate );
     }
 }
 
 function animate() {
-    requestAnimationFrame( animate );
     renderer.render( scene, camera );
     controls.update();
 
@@ -188,6 +204,7 @@ window.addEventListener( 'dblclick', (e) => {
 
     if (intersects.length > 0) {
         controls.target.copy( intersects[0].point );
+        requestAnimationFrame( animate );
     };
 });
 
@@ -195,4 +212,9 @@ window.addEventListener( 'resize', () => {
     renderer.setSize( window.innerWidth, window.innerHeight );
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+    requestAnimationFrame( animate );
+});
+
+controls.addEventListener( 'change', () => {
+    requestAnimationFrame( animate );
 });
