@@ -33,9 +33,53 @@ const raycaster = new THREE.Raycaster();
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 raycaster.firstHitOnly = true;
 
+const mouse = new THREE.Vector2();
+
+let bvh;
+
+
+const vertexShader = `
+    #include <batching_pars_vertex>
+    #include <color_pars_vertex>
+
+    varying vec3 v_BatchedNormal;
+    varying vec4 v_BatchedColor;
+    varying vec3 v_ViewDirection;
+
+    void main() {
+        #include <batching_vertex>
+        #include <color_vertex>
+
+        mat4 batchingModelViewMatrix = modelViewMatrix * batchingMatrix;
+
+        vec4 batchedPosition = batchingModelViewMatrix * vec4( position, 1.0 );
+        v_ViewDirection = normalize( -batchedPosition.xyz );
+
+        v_BatchedNormal = vec3( normalize( batchingModelViewMatrix * vec4( normal, 0.0 )));
+
+        v_BatchedColor = vec4( vColor );
+        
+        gl_Position = projectionMatrix * batchedPosition;
+    }
+`
+
+const fragmentShader = `
+    varying vec3 v_BatchedNormal;
+    varying vec4 v_BatchedColor;
+    varying vec3 v_ViewDirection;
+
+    void main() {
+        float fresnel = dot( v_ViewDirection, v_BatchedNormal );
+
+        gl_FragColor = vec4( vec3( fresnel * v_BatchedColor.rgb), v_BatchedColor.a );  // v_InstanceColor
+        // gl_FragColor = vec4( fresnel * vec3( 0.8, 0.8, 0.8 ), 1.0 );
+    }
+`
+
+
 await init();
 
-const bvh = new ObjectBVH( scene );
+bvh = new ObjectBVH( scene );
 
 animate();
 
@@ -57,7 +101,7 @@ async function init() {
         const visited = [];
         const n_Instances = gltf.scene.userData.nInstances;
 
-        let i;
+        let i = 0;
         let instanceId;
         let geometryId;
         let matrix;
@@ -68,7 +112,11 @@ async function init() {
             gltf.scene.userData.nInstances,
             gltf.scene.userData.vCount,
             gltf.scene.userData.iCount,
-            new THREE.MeshStandardMaterial()
+            new THREE.ShaderMaterial({
+                vertexShader,
+                fragmentShader,
+                side: THREE.DoubleSide,
+            })
         )
         
         gltf.scene.traverse(( child ) => {
@@ -90,7 +138,7 @@ async function init() {
                     translation = child.translation.clone();
                     scale = child.scale.clone();
 
-                    matrix.compose(translation, rotation, scale);
+                    matrix.compose( translation, rotation, scale );
                 }
 
                 if ( !child.userData.R ) {
@@ -115,6 +163,22 @@ async function init() {
 
         objectGroup.add( batchedMesh );
     }
-
 }
 
+window.addEventListener( 'dblclick', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects( bvh.objects );
+
+    if (intersects.length > 0) {
+        controls.target.copy( intersects[0].point );
+    };
+});
+
+window.addEventListener( 'resize', () => {
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+});
