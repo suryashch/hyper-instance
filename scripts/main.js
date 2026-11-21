@@ -13,7 +13,7 @@ document.body.appendChild( renderer.domElement );
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 250 );
-camera.position.set( 10,10,10 );
+camera.position.set( 40,40,40 );
 
 const controls = new OrbitControls( camera, renderer.domElement );
 controls.enablePan = true;
@@ -29,18 +29,18 @@ controls.mouseButtons = {
 	MIDDLE: THREE.MOUSE.DOLLY,
 	RIGHT: THREE.MOUSE.PAN
 }
-controls.target = new THREE.Vector3( 0,0,0 );
+controls.target = new THREE.Vector3( 0,15,0 );
 controls.update();
 
 const ambientLight = new THREE.AmbientLight();
 scene.add( ambientLight );
 
-const gridHelper = new THREE.GridHelper( 100, 50, 0xb5b5b5, 0x444444 ); // ( size, divisions )
+const gridHelper = new THREE.GridHelper( 100, 50, '#2aee8c', '#464646' ); // ( size, divisions )
 gridHelper.position.set( 0, 0, 0 );
 scene.add( gridHelper );
 
 const objectGroup = new THREE.Group();
-objectGroup.position.set( -21, 0, 32 );
+objectGroup.position.set( -21,0,32 );
 
 const raycaster = new THREE.Raycaster();
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -107,20 +107,20 @@ async function init() {
     const loader = new GLTFLoader().setPath( "public/models/" );
     let batchedMesh;
     
-    loader.load( 'mep-hyperinstance-ifc-guid-color-2.glb', loadGltf );
-    loader.load( 'mep-fittings_hi-lo-res_ifc-guid-2.glb', loadGltf );
+    loader.load( 'mep-hyperinstance-ifc-guid-color-2.glb', makeBatchedMesh );
+    loader.load( 'mep-fittings_hi-lo-res_ifc-guid-2.glb', makeBatchedMesh );
     scene.add( objectGroup );
     
-    function loadGltf( gltf ) {
+    function makeBatchedMesh( gltf ) {
         const visited = [];
         const n_Instances = gltf.scene.userData.nInstances;
+        const defaultColor = new THREE.Vector4( 0.8, 0.8, 0.8, 1.0 );
 
-        let i = 0;
         let instanceId;
         let geometryId;
         let matrix;
+        let i = 0;
         let instColor = new THREE.Vector4();
-        let defaultColor = new THREE.Vector4( 0.8, 0.8, 0.8, 1.0 );
 
         batchedMesh = new THREE.BatchedMesh(
             gltf.scene.userData.nInstances,
@@ -128,8 +128,7 @@ async function init() {
             gltf.scene.userData.iCount,
             new THREE.ShaderMaterial({
                 vertexShader,
-                fragmentShader,
-                side: THREE.DoubleSide,
+                fragmentShader
             })
         )
         
@@ -168,13 +167,6 @@ async function init() {
                 if ( child.children.length > 0 ) batchedMesh.setVisibleAt( instanceId, false );
 
                 i++;
-
-                child.geometry = null;
-                child.matrixWorld = null;
-
-                child.traverse((element) => {
-                    element = null;
-                })
             }
         })
 
