@@ -5,11 +5,23 @@ body {
 }
 
 h1 {
-    font-weight: 300;
-    font-size: x-large;
+    font-weight: 500;
+    font-size: xx-large;
 }
 
 h2 {
     font-weight: 500;
     font-size: smaller;
+}
+
+.contents {
+    position: fixed; 
+    bottom: 10px; 
+    background-color: rgba(180, 180, 180, 0.2); 
+    backdrop-filter: blur(10px); 
+    padding-left: 1%;
+    padding-right: 1%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-radius: 5%;
 }
