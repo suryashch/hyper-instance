@@ -135,7 +135,7 @@ async function init() {
         gltf.scene.traverse(( child ) => {
             if ( child.isMesh ) {
                 if ( i > n_Instances ) {
-                    console.log("Exceeded number of instances");
+                    console.log( "Exceeded number of instances" );
                     return;
                 };
 
@@ -188,10 +188,10 @@ function animate() {
 // eventListeners
 
 window.addEventListener( 'dblclick', (e) => {
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = -( e.clientY / window.innerHeight ) * 2 + 1;
 
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.setFromCamera( mouse, camera );
     const intersects = raycaster.intersectObjects( bvh.objects );
 
     if (intersects.length > 0) {
