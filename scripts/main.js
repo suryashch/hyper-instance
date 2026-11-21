@@ -96,8 +96,6 @@ const fragmentShader = `
 
 await init();
 
-bvh = new ObjectBVH( scene );
-
 animate();
 
 
@@ -181,6 +179,8 @@ async function init() {
         })
 
         objectGroup.add( batchedMesh );
+        bvh = new ObjectBVH( objectGroup );
+        
         requestAnimationFrame( animate );
     }
 }
